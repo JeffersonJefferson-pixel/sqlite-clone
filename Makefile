@@ -1,8 +1,8 @@
 db: db.c
-				gcc db.c -o db
+		gcc *.c -o db
 
 run: db
-				./db
+		./db
 
 test: db
-				bundle exec rspec
+		bundle exec rspec
