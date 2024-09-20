@@ -6,6 +6,7 @@
 #include "compiler.h"
 #include "vm.h"
 #include "pager.h"
+#include "btree.h"
 
 void print_prompt() {
   printf("db > ");
@@ -42,11 +43,16 @@ Table* db_open(const char* filename) {
   // open database file
   // initialize pager data structure
   Pager* pager = pager_open(filename);
-  uint32_t num_rows = pager->file_length / ROW_SIZE;
   // initialize table data structure
   Table* table = (Table*)malloc(sizeof(Table));
   table->pager = pager;
-  table->num_rows = num_rows;
+  table->root_page_num = 0;
+
+  if (pager->num_pages == 0) {
+    // intialize root page as leaf node.
+    void* root_node = get_page(pager, 0);
+    initialize_leaf_node(root_node);
+  }
 
   return table;
 }

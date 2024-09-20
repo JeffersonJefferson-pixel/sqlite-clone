@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #define TABLE_MAX_PAGES 100
 
@@ -30,6 +31,32 @@ typedef struct {
   char username[COLUMN_USERNAME_SIZE + 1];
   char email[COLUMN_EMAIL_SIZE + 1];
 } Row;
+
+
+// pager accesses page cache and file. 
+// table makes requests for pages through the pager.
+typedef struct {
+  int file_descriptor;
+  uint32_t file_length;
+  uint32_t num_pages;
+  void* pages[TABLE_MAX_PAGES];
+}  Pager;
+
+// table keeps track of its root node page number.
+typedef struct {
+  Pager* pager;
+  uint32_t root_page_num;
+} Table;
+
+// represents location in the table.
+// provides abstraction for how table is stored.
+// we identity a position by page number of the node, and the cell number within the node.
+typedef struct {
+    Table* table;
+    uint32_t page_num;
+    uint32_t cell_num;
+    bool end_of_table;
+} Cursor;
 
 static const uint32_t ID_SIZE = size_of_attribute(Row, id);
 static const uint32_t USERNAME_SIZE = size_of_attribute(Row, username);
