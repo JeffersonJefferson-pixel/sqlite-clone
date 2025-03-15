@@ -73,7 +73,34 @@ uint32_t* internal_node_child(void* node, uint32_t child_num) {
 }
 
 uint32_t* internal_node_key(void* node, uint32_t key_num) {
-    return internal_node_cell(node, key_num) + INTERNAL_NODE_CHILD_SIZE;
+    return (void*)internal_node_cell(node, key_num) + INTERNAL_NODE_CHILD_SIZE;
+}
+
+uint32_t internal_node_find_child(void* node, uint32_t key) {
+  uint32_t num_keys = *internal_node_num_keys(node);
+
+  // find index of child to search with binary search.
+  uint32_t min_index = 0;
+  uint32_t max_index = num_keys;
+
+  while (min_index < max_index) {
+    uint32_t index = (min_index + max_index) / 2;
+    uint32_t key_to_right = *internal_node_key(node, index);
+    if (key_to_right > key) {
+      max_index = index;
+    } else {
+      min_index = index + 1;
+    }
+  }
+
+  return min_index;
+}
+
+void update_internal_node_key(void *node, uint32_t old_key, uint32_t new_key) {
+    // find internal node with old key
+    uint32_t old_child_index = internal_node_find_child(node, old_key);
+    // update to new key
+    *internal_node_key(node, old_child_index) = new_key;
 }
 
 uint32_t get_node_max_key(void* node) {
@@ -94,4 +121,8 @@ void initialize_internal_node(void* node) {
     set_node_type(node, NODE_INTERNAL);
     set_node_root(node, false);
     *internal_node_num_keys(node) = 0;
+}
+
+uint32_t* node_parent(void * node) {
+    return node + PARENT_POINTER_OFFSET;
 }
