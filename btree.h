@@ -25,7 +25,10 @@ static const uint32_t COMMON_NODE_HEADER_SIZE = NODE_TYPE_SIZE + IS_ROOT_SIZE + 
 
 static const uint32_t LEAF_NODE_NUM_CELLS_SIZE = sizeof(uint32_t);
 static const uint32_t LEAF_NODE_NUM_CELLS_OFFSET = COMMON_NODE_HEADER_SIZE;
-static const uint32_t LEAF_NODE_HEADER_SIZE = COMMON_NODE_HEADER_SIZE + LEAF_NODE_NUM_CELLS_SIZE;
+// page number of the leaf's sibligng node on the right.
+static const uint32_t LEAF_NODE_NEXT_LEAF_SIZE = sizeof(uint32_t);
+static const uint32_t LEAF_NODE_NEXT_LEAF_OFFSET = LEAF_NODE_NUM_CELLS_OFFSET + LEAF_NODE_NUM_CELLS_SIZE;
+static const uint32_t LEAF_NODE_HEADER_SIZE = COMMON_NODE_HEADER_SIZE + LEAF_NODE_NUM_CELLS_SIZE + LEAF_NODE_NEXT_LEAF_SIZE;
 
 // a body of a leaf node is an array of cells.
 // each cell is a key followed by a value (a serialized row).
@@ -55,6 +58,7 @@ static const uint32_t INTERNAL_NODE_CHILD_SIZE = sizeof(uint32_t);
 static const uint32_t INTERNAL_NODE_CELL_SIZE = INTERNAL_NODE_KEY_SIZE + INTERNAL_NODE_CHILD_SIZE;
 
 uint32_t* leaf_node_num_cells(void* node);
+uint32_t* leaf_node_next_leaf(void* node);
 void initialize_leaf_node(void* node);
 uint32_t* leaf_node_key(void* node, uint32_t cell_num);
 void* leaf_node_value(void* node, uint32_t cell_num);
