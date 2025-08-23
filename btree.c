@@ -66,9 +66,21 @@ uint32_t* internal_node_child(void* node, uint32_t child_num) {
         printf("Tried to access child_num %d > num_keys %d\n", child_num, num_keys);
         exit(EXIT_FAILURE);
     } else if (child_num == num_keys) {
-        return internal_node_right_child(node);
+        uint32_t* right_child  = internal_node_right_child(node);
+        // prevent accessing an invalid page.
+        if (*right_child == INVALID_PAGE_NUM) {
+            printf("Tried to access right child of node, but was invalid page\n");
+            exit(EXIT_FAILURE);
+        }
+        return right_child;
     } else {
-        return internal_node_cell(node, child_num);
+        uint32_t* child = internal_node_cell(node, child_num);
+        // prevent access accessing invalid page
+        if (*child == INVALID_PAGE_NUM) {
+            printf("Tried to access child %d of node, but was invalid page\n", child_num);
+            exit(EXIT_FAILURE);
+        }
+        return child;
     }
 }
 
@@ -103,13 +115,13 @@ void update_internal_node_key(void *node, uint32_t old_key, uint32_t new_key) {
     *internal_node_key(node, old_child_index) = new_key;
 }
 
-uint32_t get_node_max_key(void* node) {
-    switch (get_node_type(node)) {
-        case NODE_INTERNAL:
-            return *internal_node_key(node, *internal_node_num_keys(node) - 1);
-        case NODE_LEAF:
-            return *leaf_node_key(node, *leaf_node_num_cells(node) - 1);
-    }
+uint32_t get_node_max_key(Pager* pager, void* node) {
+  // walk down the right children until get to a leaf node.
+  if (get_node_type(node) == NODE_LEAF) {
+    return *leaf_node_key(node, *leaf_node_num_cells(node) - 1);
+  }
+  void* right_child = get_page(pager, *internal_node_right_child(node));
+  return get_node_max_key(pager, right_child);
 }
 
 bool is_node_root(void* node) {
@@ -121,6 +133,8 @@ void initialize_internal_node(void* node) {
     set_node_type(node, NODE_INTERNAL);
     set_node_root(node, false);
     *internal_node_num_keys(node) = 0;
+    // if not set, right child might be 0, the root page number. 
+    *internal_node_right_child(node) = INVALID_PAGE_NUM;
 }
 
 uint32_t* node_parent(void * node) {
